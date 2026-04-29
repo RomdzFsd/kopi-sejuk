@@ -1,0 +1,221 @@
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+  // Taruh Config dari Firebase lu di sini
+  const firebaseConfig = {
+    apiKey: "AIzaSyCAuo0evyLZRvqWSYwUxP30ET01ZPGoqJ4",
+    authDomain: "kopi-sejuk.firebaseapp.com",
+    databaseURL: "https://kopi-sejuk-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "kopi-sejuk",
+    storageBucket: "kopi-sejuk.firebasestorage.app",
+    messagingSenderId: "911072415848",
+    appId: "911072415848:web:ae88ae6ae15250a1f42bdd",
+  measurementId: "G-SM65CLY6Z9"
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
+
+
+
+<!DOCTYPE html>
+<html lang="id">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kopi Sejuk | Premium Digital Ordering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .menu-card { transition: all 0.3s ease; }
+        .menu-card:active { transform: scale(0.97); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-[#fcfaf7] text-stone-900 pb-32">
+
+    <nav class="sticky top-0 z-50 glass border-b border-stone-100 px-6 py-4 flex justify-between items-center">
+        <h1 class="font-extrabold text-xl tracking-tighter text-orange-600">KOPI SEJUK</h1>
+        <div class="relative">
+            <input type="text" id="searchMenu" onkeyup="filterMenu()" placeholder="Cari kopi..." class="bg-stone-100 text-[10px] py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500/20 w-32 focus:w-40 transition-all">
+        </div>
+    </nav>
+
+    <header class="px-6 pt-8 pb-4">
+        <div class="bg-stone-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-orange-400 text-[10px] font-bold uppercase tracking-widest mb-2">Special Offer</p>
+                <h2 class="text-3xl font-extrabold leading-tight tracking-tighter mb-4">Dapatkan Diskon <br>Member 10%</h2>
+                <button class="bg-white text-stone-900 px-5 py-2.5 rounded-full font-extrabold text-[10px] uppercase shadow-lg">Ambil Promo</button>
+            </div>
+            <div class="absolute -right-10 -bottom-10 opacity-20 transform rotate-12">
+                <span class="text-[150px]">☕</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex gap-3 px-6 py-4 overflow-x-auto no-scrollbar">
+        <button class="bg-orange-500 text-white px-5 py-2 rounded-full text-[10px] font-bold whitespace-nowrap">Semua</button>
+        <button class="bg-white border border-stone-100 px-5 py-2 rounded-full text-[10px] font-bold text-stone-400 whitespace-nowrap">Kopi Susu</button>
+        <button class="bg-white border border-stone-100 px-5 py-2 rounded-full text-[10px] font-bold text-stone-400 whitespace-nowrap">Non-Coffee</button>
+    </div>
+
+    <div id="menuContainer" class="px-6 grid gap-4 mt-2">
+        <div class="menu-item menu-card bg-white p-4 rounded-[2rem] shadow-sm flex items-center gap-4 border border-stone-50" data-name="Kopi Susu Aren">
+            <img src="https://images.unsplash.com/photo-1599398054066-846f28917f38?q=80&w=200" class="w-20 h-20 rounded-2xl object-cover">
+            <div class="flex-1">
+                <h3 class="font-extrabold text-sm">Kopi Susu Aren</h3>
+                <p class="text-orange-600 font-extrabold text-sm">Rp 18.000</p>
+            </div>
+            <button onclick="addToCart('Kopi Susu Aren', 18000)" class="bg-stone-100 text-stone-900 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl">+</button>
+        </div>
+
+        <div class="menu-item menu-card bg-white p-4 rounded-[2rem] shadow-sm flex items-center gap-4 border border-stone-50" data-name="Americano Ice">
+            <img src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=200" class="w-20 h-20 rounded-2xl object-cover">
+            <div class="flex-1">
+                <h3 class="font-extrabold text-sm">Americano Ice</h3>
+                <p class="text-orange-600 font-extrabold text-sm">Rp 15.000</p>
+            </div>
+            <button onclick="addToCart('Americano Ice', 15000)" class="bg-stone-100 text-stone-900 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl">+</button>
+        </div>
+    </div>
+
+    <div id="checkoutModal" class="fixed inset-0 z-[100] bg-black/50 hidden flex items-end">
+        <div class="w-full bg-white rounded-t-[3rem] p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-extrabold tracking-tighter">Konfirmasi Pesanan</h2>
+                <button onclick="toggleModal()" class="text-stone-300">✖</button>
+            </div>
+
+            <div id="cartList" class="space-y-4 mb-8">
+                </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="text-[10px] font-bold text-stone-400 ml-2">NAMA</label>
+                    <input type="text" id="custName" class="w-full bg-stone-50 border-none p-4 rounded-2xl text-sm font-bold">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-stone-400 ml-2">NO MEJA</label>
+                    <input type="number" id="custTable" class="w-full bg-stone-50 border-none p-4 rounded-2xl text-sm font-bold">
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center bg-orange-50 p-6 rounded-[2rem] mb-8">
+                <span class="font-bold text-orange-950">Total</span>
+                <span id="finalPrice" class="text-xl font-extrabold text-orange-600">Rp 0</span>
+            </div>
+
+            <button onclick="submitOrder()" class="w-full bg-orange-500 text-white py-5 rounded-full font-extrabold shadow-xl uppercase tracking-widest active:scale-95 transition">Kirim ke Barista</button>
+        </div>
+    </div>
+
+    <div id="floatingCart" class="fixed bottom-0 left-0 w-full p-6 z-40 hidden">
+        <button onclick="toggleModal()" class="w-full bg-stone-900 text-white py-5 rounded-full font-extrabold shadow-2xl flex justify-between px-8 items-center">
+            <div class="flex items-center gap-3">
+                <span id="cartCount" class="bg-orange-500 text-[10px] px-2 py-1 rounded-md">0</span>
+                <span class="text-[11px] uppercase tracking-widest">Lihat Keranjang</span>
+            </div>
+            <span id="totalPrice" class="text-sm">Rp 0</span>
+        </button>
+    </div>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('kopi_cart')) || {};
+
+        function addToCart(name, price) {
+            if (!cart[name]) cart[name] = { qty: 0, price: price };
+            cart[name].qty++;
+            saveAndRefresh();
+        }
+
+        function updateQty(name, change) {
+            cart[name].qty += change;
+            if (cart[name].qty <= 0) delete cart[name];
+            saveAndRefresh();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('kopi_cart', JSON.stringify(cart));
+            renderUI();
+        }
+
+        function renderUI() {
+            let count = 0;
+            let total = 0;
+            let listHtml = '';
+
+            for (let item in cart) {
+                count += cart[item].qty;
+                total += cart[item].qty * cart[item].price;
+                listHtml += `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-extrabold text-sm">${item}</p>
+                            <p class="text-[10px] text-stone-400">Rp ${cart[item].price.toLocaleString('id-ID')}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="updateQty('${item}', -1)" class="w-8 h-8 rounded-full bg-stone-100 font-bold">-</button>
+                            <span class="font-bold text-sm">${cart[item].qty}</span>
+                            <button onclick="updateQty('${item}', 1)" class="w-8 h-8 rounded-full bg-stone-100 font-bold">+</button>
+                        </div>
+                    </div>`;
+            }
+
+            document.getElementById('floatingCart').style.display = count > 0 ? 'block' : 'none';
+            document.getElementById('cartCount').innerText = count;
+            document.getElementById('totalPrice').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('finalPrice').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('cartList').innerHTML = listHtml || '<p class="text-center text-stone-400 text-xs">Keranjang masih kosong...</p>';
+        }
+
+        function toggleModal() {
+            document.getElementById('checkoutModal').classList.toggle('hidden');
+        }
+
+        function filterMenu() {
+            let input = document.getElementById('searchMenu').value.toLowerCase();
+            let items = document.querySelectorAll('.menu-item');
+            items.forEach(item => {
+                let name = item.getAttribute('data-name').toLowerCase();
+                item.style.display = name.includes(input) ? 'flex' : 'none';
+            });
+        }
+
+  // Ganti bagian submitOrder yang lama
+function submitOrder() {
+    const name = document.getElementById('custName').value;
+    const table = document.getElementById('custTable').value;
+    if (!name || !table) return alert("Isi Nama & No Meja dulu!");
+
+    const orderId = "ORD-" + Date.now();
+    const orderData = {
+        id: orderId,
+        customer: name,
+        table: table,
+        items: cart,
+        total: totalPrice,
+        status: "Pending", // Status awal
+        timestamp: Date.now()
+    };
+
+    // 1. KIRIM KE FIREBASE (Agar Penjual Bisa Lihat)
+    firebase.database().ref('orders/' + orderId).set(orderData)
+    .then(() => {
+        alert("Pesanan terkirim ke sistem! Menampilkan struk...");
+        showStruk(orderData); // Tampilkan struk digital
+    })
+    .catch((error) => alert("Gagal kirim: " + error.message));
+}
+
+function showStruk(data) {
+    // Tampilkan struk digital seperti yang kita bahas sebelumnya
+    // (Gunakan innerHTML untuk memunculkan modal struk)
+}
+
+    </script>
+</body>
+</html>
